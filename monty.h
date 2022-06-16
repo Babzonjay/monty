@@ -1,30 +1,31 @@
-#ifndef _MONTY_H_
-#define _MONTY_H_
-
-#include <stdlib.h>
+#ifndef MONTY_H
+#define MONTY_H
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
 #include <unistd.h>
+#include <stdbool.h>
+#include <ctype.h>
+#include <fcntl.h>
 
-/**
- * struct var_s - struct to contain the main variables of the Monty interpreter
- * @queue: flag to determine if in stack vs queue mode
- * @stack_len: length of the stack
- */
-typedef struct var_s
-{
-	int queue;
-	size_t stack_len;
-} var_t;
+/**monty errors defined*/
+#define MONTY_ERROR_NONE 0
+#define MONTY_ERROR_INVALID_OPCODE 1
+#define MONTY_ERROR_PUSH_MISSING_ARG 2
+#define MONTY_ERROR_PUSH_INVALID_ARG 3
+#define MONTY_ERROR_PINT_EMPTY 4
+#define MONTY_ERROR_POP_EMPTY 5
 
-#define STACK 0
-#define QUEUE 1
 
-/* global struct to hold flag for queue and stack length */
-extern var_t var;
+typedef struct monty_s{
+  char  *save_ptr;
+  int line;
+  char *token;
+  int mode;
+  int error;
+}monty_t;
+
+extern char* operand;
 
 /**
  * struct stack_s - doubly linked list representation of a stack (or queue)
@@ -43,7 +44,7 @@ typedef struct stack_s
 } stack_t;
 
 /**
- * struct instruction_s - opcoode and its function
+ * struct instruction_s - opcode and its function
  * @opcode: the opcode
  * @f: function to handle the opcode
  *
@@ -56,28 +57,33 @@ typedef struct instruction_s
 	void (*f)(stack_t **stack, unsigned int line_number);
 } instruction_t;
 
-void get_op(char *op, stack_t **stack, unsigned int line_number);
-void m_push(stack_t **stack, unsigned int line_number);
-void m_push2(stack_t **stack, int n);
-void m_pall(stack_t **stack, unsigned int line_number);
-void m_pint(stack_t **stack, unsigned int line_number);
-void m_pop(stack_t **stack, unsigned int line_number);
-void m_swap(stack_t **stack, unsigned int line_number);
-void m_add(stack_t **stack, unsigned int line_number);
-void m_nop(stack_t **stack, unsigned int line_number);
-void m_sub(stack_t **stack, unsigned int line_number);
-void m_mul(stack_t **stack, unsigned int line_number);
-void m_div(stack_t **stack, unsigned int line_number);
-void m_mod(stack_t **stack, unsigned int line_number);
-void rotl(stack_t **stack, unsigned int line_number);
-void rotr(stack_t **stack, unsigned int line_number);
-void m_stack(stack_t **stack, unsigned int line_number);
-void m_queue(stack_t **stack, unsigned int line_number);
-void m_pchar(stack_t **stack, unsigned int line_number);
-void m_pstr(stack_t **stack, unsigned int line_number);
-void free_stack(int status, void *arg);
-void m_fs_close(int status, void *arg);
-void free_lineptr(int status, void *arg);
-stack_t *add_node(stack_t **stack, const int n);
+/**
+ * struct line_s - line content and its number
+ * @content: line content
+ * @number: line number 
+ *
+ * Description: stores line of the monty source code
+ */
+typedef struct line_s
+{
+	char *content;
+	int number;
+} line_t;
 
-#endif /* _MONTY_H_ */
+line_t *textfile_to_array(const char *filename);
+void op_push(stack_t **stack, unsigned int line_number);
+void op_pall(stack_t **stack, unsigned int line_number);
+void op_pint(stack_t **stack, unsigned int line_number);
+void op_pop(stack_t **stack, unsigned int line_number);
+void op_swap(stack_t **stack, unsigned int line_number);
+
+char **split_line(char *line);
+void (*get_op_func(char *s))(stack_t**, unsigned int);
+
+
+void free_lines(line_t *head);
+void free_stack(stack_t *head);
+int _atoi(char *s, int* n);
+
+#endif
+
